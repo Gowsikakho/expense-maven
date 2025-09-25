@@ -1,3 +1,4 @@
+com\exp\gui\CategoryGUI$2.class
 com\exp\model\Category.class
 com\exp\gui\CategoryGUI.class
 com\exp\Main.class
@@ -6,4 +7,5 @@ com\exp\gui\ExpenseGUI.class
 com\exp\util\DatabaseConnection.class
 com\exp\gui\Home.class
 com\exp\dao\ExpenseDAO.class
+com\exp\gui\CategoryGUI$1.class
 com\exp\model\Expense.class
