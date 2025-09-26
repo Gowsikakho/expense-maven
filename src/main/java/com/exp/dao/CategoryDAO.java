@@ -57,6 +57,21 @@ public class CategoryDAO {
         return null; // Not found
     }
 
+    // Add this method inside CategoryDAO
+    public String getCategoryNameById(int id) throws SQLException {
+    String sql = "SELECT name FROM category WHERE id = ?";
+    try (Connection conn = DatabaseConnection.getDBConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, id);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getString("name");
+            }
+        }
+    }
+    return null; // return null if not found
+}
+// Add this method inside CategoryDAO       
     public List<String> getAllCategoryNames() {
         List<String> list = new ArrayList<>();
         String sql = "SELECT name FROM category";  // Adjust column name if different

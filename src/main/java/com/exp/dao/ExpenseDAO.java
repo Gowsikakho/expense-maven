@@ -51,7 +51,7 @@ public class ExpenseDAO {
         }
     }
 
-    // ✅ Get a single expense by exp_id
+    //  Get a single expense by exp_id
     public Expense getExpenseById(int expId) throws SQLException {
         String sql = "SELECT exp_id, title, description, amt, exp_date, id FROM expenses WHERE exp_id=?";
         try (Connection con = DatabaseConnection.getDBConnection();
@@ -73,7 +73,7 @@ public class ExpenseDAO {
         return null;
     }
 
-    // ✅ Get all expenses
+    //  Get all expenses
     public List<Expense> getAllExpenses() throws SQLException {
         List<Expense> list = new ArrayList<>();
         String sql = "SELECT exp_id, title, description, amt, exp_date, id FROM expenses";
