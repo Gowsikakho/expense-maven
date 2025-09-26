@@ -1,12 +1,16 @@
 package com.exp.dao;
 
-import com.exp.model.Expense;
-import com.exp.util.DatabaseConnection;
-
-import javax.swing.table.DefaultTableModel;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.table.DefaultTableModel;
+
+import com.exp.model.Expense;
+import com.exp.util.DatabaseConnection;
 
 public class ExpenseDAO {
 
@@ -91,6 +95,29 @@ public class ExpenseDAO {
         }
         return list;
     }
+
+    public List<Expense> getExpensesByCategory(int categoryId) throws SQLException {
+        List<Expense> list = new ArrayList<>();
+        String sql = "SELECT exp_id, title, description, amt, exp_date, id FROM expenses WHERE id=?";
+        try (Connection con = DatabaseConnection.getDBConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, categoryId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Expense(
+                        rs.getInt("exp_id"),
+                        rs.getString("title"),
+                        rs.getString("description"),
+                        rs.getDouble("amt"),
+                        rs.getString("exp_date"),
+                        rs.getInt("id")
+                    ));
+                }
+            }
+        }
+        return list;
+    }
+
 
     // ✅ TableModel for GUI JTable
     public DefaultTableModel getExpenseTableModel() throws SQLException {

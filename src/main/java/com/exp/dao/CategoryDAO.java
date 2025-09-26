@@ -57,6 +57,22 @@ public class CategoryDAO {
         return null; // Not found
     }
 
+    public List<String> getAllCategoryNames() {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT name FROM category";  // Adjust column name if different
+        try (Connection conn = DatabaseConnection.getDBConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // 3️⃣ Get all categories
     public List<Category> getAllCategories() throws SQLException {
         List<Category> categories = new ArrayList<>();
@@ -69,6 +85,20 @@ public class CategoryDAO {
             }
         }
         return categories;
+    }
+    //filter
+    public int getCategoryIdByName(String name) throws SQLException {
+        String sql = "SELECT id FROM category WHERE name = ?";
+        try (Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        }
+        return 0; // or -1 if not found
     }
 
     // 4️⃣ Update category

@@ -1,14 +1,27 @@
 package com.exp.gui;
 
-import com.exp.dao.ExpenseDAO;
-import com.exp.model.Expense;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.List;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+
+import com.exp.dao.CategoryDAO;
+import com.exp.dao.ExpenseDAO;
+import com.exp.model.Expense;
 
 public class ExpenseGUI extends JFrame {
 
@@ -17,17 +30,19 @@ public class ExpenseGUI extends JFrame {
     private JTable table;
     private DefaultTableModel model;
     private ExpenseDAO expenseDAO;
+    private CategoryDAO categoryDAO; // ✅ Class-level variable
 
     public ExpenseGUI() {
         super("Expense Manager");
         expenseDAO = new ExpenseDAO();
+        categoryDAO = new CategoryDAO(); // Initialize here
 
         setLayout(new BorderLayout());
 
         // ===== Input Panel =====
         JPanel inputPanel = new JPanel(new GridLayout(5, 2, 5, 5));
 
-        // ID (only for update/delete)
+        // ID (for update/delete)
         inputPanel.add(new JLabel("ID:"));
         txtId = new JTextField();
         inputPanel.add(txtId);
@@ -49,30 +64,30 @@ public class ExpenseGUI extends JFrame {
 
         // Category dropdown
         inputPanel.add(new JLabel("Category:"));
-        String[] categories = {"Grocery", "Transport", "Shopping", "Bills", "Entertainment"};
-        cmbCategory = new JComboBox<>(categories);
+        List<String> categoryList = categoryDAO.getAllCategoryNames();
+        cmbCategory = new JComboBox<>(categoryList.toArray(new String[0]));
         inputPanel.add(cmbCategory);
 
         add(inputPanel, BorderLayout.NORTH);
 
         // ===== Table Panel =====
-        model = new DefaultTableModel(new String[]{"ID","Title","Description","Amount","Date","Category"},0);
+        model = new DefaultTableModel(new String[]{"ID", "Title", "Description", "Amount", "Date", "Category ID"}, 0);
         table = new JTable(model);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         // ===== Button Panel =====
         JPanel btnPanel = new JPanel();
-
         JButton btnAdd = new JButton("Add");
         JButton btnUpdate = new JButton("Update");
         JButton btnDelete = new JButton("Delete");
         JButton btnRefresh = new JButton("Refresh");
+        JButton btnFilter = new JButton("Filter");
 
         btnPanel.add(btnAdd);
         btnPanel.add(btnUpdate);
         btnPanel.add(btnDelete);
         btnPanel.add(btnRefresh);
-
+        btnPanel.add(btnFilter);
         add(btnPanel, BorderLayout.SOUTH);
 
         // ===== Button Actions =====
@@ -80,6 +95,7 @@ public class ExpenseGUI extends JFrame {
         btnUpdate.addActionListener(e -> updateExpense());
         btnDelete.addActionListener(e -> deleteExpense());
         btnRefresh.addActionListener(e -> loadExpenses());
+        btnFilter.addActionListener(e -> filterExpenses());
 
         // ===== Table Row Click =====
         table.addMouseListener(new MouseAdapter() {
@@ -91,9 +107,12 @@ public class ExpenseGUI extends JFrame {
                     txtDesc.setText(model.getValueAt(row, 2).toString());
                     txtAmount.setText(model.getValueAt(row, 3).toString());
 
-                    // Category (DB stores numeric ID → map to dropdown)
                     int catId = Integer.parseInt(model.getValueAt(row, 5).toString());
-                    cmbCategory.setSelectedIndex(catId - 1);
+                    // Set selected category by matching index in category list
+                    List<String> categories = categoryDAO.getAllCategoryNames();
+                    if (catId > 0 && catId <= categories.size()) {
+                        cmbCategory.setSelectedIndex(catId - 1);
+                    }
                 }
             }
         });
@@ -109,12 +128,12 @@ public class ExpenseGUI extends JFrame {
     private void createExpense() {
         try {
             Expense e = new Expense(
-                0,
-                txtTitle.getText(),
-                txtDesc.getText(),
-                Double.parseDouble(txtAmount.getText()),
-                null, // date is auto
-                cmbCategory.getSelectedIndex() + 1 // map dropdown to ID
+                    0,
+                    txtTitle.getText(),
+                    txtDesc.getText(),
+                    Double.parseDouble(txtAmount.getText()),
+                    null,
+                    cmbCategory.getSelectedIndex() + 1
             );
             expenseDAO.createExpense(e);
             loadExpenses();
@@ -130,12 +149,12 @@ public class ExpenseGUI extends JFrame {
     private void updateExpense() {
         try {
             Expense e = new Expense(
-                Integer.parseInt(txtId.getText()),
-                txtTitle.getText(),
-                txtDesc.getText(),
-                Double.parseDouble(txtAmount.getText()),
-                null, // don't update date
-                cmbCategory.getSelectedIndex() + 1
+                    Integer.parseInt(txtId.getText()),
+                    txtTitle.getText(),
+                    txtDesc.getText(),
+                    Double.parseDouble(txtAmount.getText()),
+                    null,
+                    cmbCategory.getSelectedIndex() + 1
             );
             if (expenseDAO.updateExpense(e)) {
                 loadExpenses();
@@ -174,9 +193,48 @@ public class ExpenseGUI extends JFrame {
             List<Expense> list = expenseDAO.getAllExpenses();
             for (Expense e : list) {
                 model.addRow(new Object[]{
-                        e.getId(), e.getTitle(), e.getDescription(),
-                        e.getAmount(), e.getDate(), e.getCategoryId()
+                        e.getId(),
+                        e.getTitle(),
+                        e.getDescription(),
+                        e.getAmount(),
+                        e.getDate(),
+                        e.getId()
                 });
+            }
+        } catch (SQLException ex) {
+            showError(ex);
+        }
+    }
+
+    private void filterExpenses() {
+        try {
+            String[] categoryArray = categoryDAO.getAllCategoryNames().toArray(new String[0]);
+            String category = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Select Category to Filter:",
+                    "Filter Expenses",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    categoryArray,
+                    categoryArray.length > 0 ? categoryArray[0] : null
+            );
+
+            if (category != null) {
+                int id = categoryDAO.getCategoryIdByName(category);
+                if (id > 0) {
+                    model.setRowCount(0);
+                    List<Expense> list = expenseDAO.getExpensesByCategory(id);
+                    for (Expense e : list) {
+                        model.addRow(new Object[]{
+                                e.getId(),
+                                e.getTitle(),
+                                e.getDescription(),
+                                e.getAmount(),
+                                e.getDate(),
+                                e.getId()
+                        });
+                    }
+                }
             }
         } catch (SQLException ex) {
             showError(ex);
