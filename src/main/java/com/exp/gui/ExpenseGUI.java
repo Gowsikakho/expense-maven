@@ -9,21 +9,19 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import com.exp.dao.CategoryDAO;
 import com.exp.dao.ExpenseDAO;
 import com.exp.model.Expense;
 
-public class ExpenseGUI extends JFrame {
+public class ExpenseGUI extends JPanel {
 
     private JTextField txtId, txtTitle, txtDesc, txtAmount;
     private JComboBox<String> cmbCategory;
@@ -33,7 +31,6 @@ public class ExpenseGUI extends JFrame {
     private CategoryDAO categoryDAO;
 
     public ExpenseGUI() {
-        super("Expense Manager");
         expenseDAO = new ExpenseDAO();
         categoryDAO = new CategoryDAO();
 
@@ -110,10 +107,6 @@ public class ExpenseGUI extends JFrame {
                 }
             }
         });
-
-        setSize(800, 500);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Initial load
         loadExpenses();
@@ -195,7 +188,7 @@ public class ExpenseGUI extends JFrame {
                         e.getDescription(),
                         e.getAmount(),
                         e.getDate(),
-                        categoryDAO.getCategoryNameById(e.getCategoryId()) // FIXED
+                        categoryDAO.getCategoryNameById(e.getCategoryId())
                 });
             }
         } catch (SQLException ex) {
@@ -229,7 +222,7 @@ public class ExpenseGUI extends JFrame {
                                 e.getDescription(),
                                 e.getAmount(),
                                 e.getDate(),
-                                categoryDAO.getCategoryNameById(e.getCategoryId()) // FIXED
+                                categoryDAO.getCategoryNameById(e.getCategoryId())
                         });
                     }
                 }
@@ -250,9 +243,5 @@ public class ExpenseGUI extends JFrame {
     private void showError(Exception ex) {
         ex.printStackTrace();
         JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ExpenseGUI().setVisible(true));
     }
 }

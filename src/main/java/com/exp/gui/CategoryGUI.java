@@ -8,18 +8,16 @@ import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import com.exp.dao.CategoryDAO;
 import com.exp.model.Category;
 
-public class CategoryGUI extends JFrame {
+public class CategoryGUI extends JPanel {
 
     private JTable categoryTable;
     private DefaultTableModel tableModel;
@@ -27,10 +25,6 @@ public class CategoryGUI extends JFrame {
     private CategoryDAO dao = new CategoryDAO();
 
     public CategoryGUI() {
-        super("Category Manager");
-        setSize(800, 500);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
         // Table model
@@ -70,8 +64,6 @@ public class CategoryGUI extends JFrame {
 
         // Load categories from DB
         loadCategories();
-
-        setVisible(true);
     }
 
     // Load categories from DB
@@ -144,9 +136,5 @@ public class CategoryGUI extends JFrame {
                 e.printStackTrace();
             }
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(CategoryGUI::new);
     }
 }
